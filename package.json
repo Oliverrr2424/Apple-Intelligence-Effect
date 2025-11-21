@@ -1,6 +1,6 @@
 {
   "name": "apple-intelligence-glow-react",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "description": "Apple Intelligence style animated glow border as a reusable React component.",
   "main": "src/index.js",
   "module": "src/index.js",
@@ -29,5 +29,3 @@
     "url": ""
   }
 }
-
-
