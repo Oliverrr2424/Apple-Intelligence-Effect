@@ -1,0 +1,33 @@
+{
+  "name": "apple-intelligence-glow-react",
+  "version": "1.0.2",
+  "description": "Apple Intelligence style animated glow border as a reusable React component.",
+  "main": "src/index.js",
+  "module": "src/index.js",
+  "sideEffects": true,
+  "files": [
+    "src",
+    "README.md"
+  ],
+  "keywords": [
+    "react",
+    "apple",
+    "glow",
+    "border",
+    "lock-screen",
+    "ui",
+    "animation"
+  ],
+  "peerDependencies": {
+    "react": ">=17.0.0",
+    "react-dom": ">=17.0.0"
+  },
+  "license": "MIT",
+  "author": "",
+  "repository": {
+    "type": "git",
+    "url": ""
+  }
+}
+
+
