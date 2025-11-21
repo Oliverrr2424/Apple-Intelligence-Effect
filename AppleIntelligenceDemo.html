@@ -3,53 +3,82 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>iOS Glow Effect Demo</title>
+    <title>iOS 18 Glow Effect - Split View</title>
     <style>
+        /* --- GLOBAL VARIABLES --- */
         :root {
+            /* Presentation Colors */
+            --bg-presentation: #0a0a0a;
+            --text-presentation: #ffffff;
+            
+            /* Phone Dimensions */
             --phone-width: 360px;
-            --phone-height: 720px;
-            --phone-radius: 50px;
-            --bezel-width: 12px;
+            --phone-height: 740px;
+            --phone-radius: 55px;
+
+            /* Assistant Dimensions */
+            --card-width: 400px;
+            --card-height: 600px;
+            --card-radius: 32px;
         }
 
+        /* --- PAGE LAYOUT --- */
         body {
             margin: 0;
             padding: 0;
-            background-color: #ffffff;
+            background-color: var(--bg-presentation);
+            color: var(--text-presentation);
             display: flex;
+            flex-direction: column;
             justify-content: center;
             align-items: center;
-            height: 100vh;
-            font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", Roboto, sans-serif;
-            overflow: hidden;
+            min-height: 100vh;
+            font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI", Roboto, sans-serif;
+            overflow: hidden; /* Hide scrollbars for the demo */
         }
 
-        /* --- iPhone Mockup Chassis --- */
-        .iphone-chassis {
-            position: relative;
-            width: var(--phone-width);
-            height: var(--phone-height);
-            border-radius: var(--phone-radius);
-            background-color: #000;
-            /* The physical bezel of the phone */
-            box-shadow: 
-                0 0 0 6px #333, /* Outer shiny frame */
-                0 0 0 7px #000, /* Separation */
-                0 20px 50px rgba(0,0,0,0.5); /* Drop shadow */
-            z-index: 1;
-            /* Ensure content doesn't spill out of the rounded corners */
-            overflow: hidden; 
+        header {
+            margin-bottom: 40px;
+            text-align: center;
+            animation: fadeIn 1s ease-out forwards;
+            position: absolute;
+            top: 40px;
+            z-index: 100;
         }
 
-        /* Container for the Glow Effects - Pushed behind UI but above black bg */
-        #glow-container {
+        h1 {
+            font-weight: 600;
+            font-size: 1.8rem;
+            margin: 0 0 8px 0;
+            letter-spacing: -0.5px;
+            background: linear-gradient(135deg, #fff 0%, #888 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        /* Container for the side-by-side layout */
+        .main-stage {
+            display: flex;
+            flex-direction: row;
+            gap: 80px; /* Space between Phone and AI */
+            align-items: center;
+            justify-content: center;
+            margin-top: 60px;
+            flex-wrap: wrap; /* Wrap on smaller screens */
+        }
+
+        /* --- SHARED GLOW COMPONENT STYLES --- */
+        /* These classes now automatically inherit shape from their parent */
+        
+        .glow-container-wrapper {
             position: absolute;
             top: 0; left: 0; right: 0; bottom: 0;
-            z-index: 10; /* Behind UI, Above Background */
+            z-index: 10;
             pointer-events: none;
+            /* Inherit the radius from the phone or the card */
+            border-radius: inherit; 
         }
 
-        /* --- The Actual Glow Logic (Adapted from your code) --- */
         .effect-layer {
             position: absolute;
             top: 0; left: 0; right: 0; bottom: 0;
@@ -57,22 +86,24 @@
             justify-content: center;
             align-items: center;
             pointer-events: none;
+            border-radius: inherit;
         }
 
         .ring-container {
             position: relative;
             width: 100%;
             height: 100%;
-            /* Matches the phone radius perfectly */
-            border-radius: var(--phone-radius);
+            border-radius: inherit;
+            overflow: hidden; 
         }
 
         .gradient-buffer {
             position: absolute;
             top: 0; left: 0; right: 0; bottom: 0;
-            border-radius: var(--phone-radius);
+            border-radius: inherit;
             background-repeat: no-repeat;
-            /* Mask logic to create the border stroke */
+            
+            /* The Mask Trick */
             -webkit-mask: 
                 linear-gradient(#fff 0 0) content-box, 
                 linear-gradient(#fff 0 0);
@@ -81,153 +112,361 @@
                 linear-gradient(#fff 0 0);
             -webkit-mask-composite: xor;
             mask-composite: exclude;
+            
             transition-property: opacity;
             will-change: opacity;
         }
 
-        /* --- On-Screen UI Elements --- */
+
+        /* --- COMPONENT 1: IPHONE CHASSIS --- */
+        .iphone-chassis {
+            position: relative;
+            width: var(--phone-width);
+            height: var(--phone-height);
+            border-radius: var(--phone-radius);
+            background-color: #000;
+            box-shadow: 
+                0 0 0 4px #3a3a3a,
+                0 0 0 8px #1a1a1a,
+                0 30px 60px rgba(0,0,0,0.6);
+            z-index: 1;
+            overflow: hidden;
+            transform: scale(0.9); /* Scale down slightly to fit both */
+            transition: transform 0.3s ease;
+        }
+        
+        .iphone-chassis:hover {
+            transform: scale(0.92);
+        }
+
+        /* iPhone UI Layer */
         .ui-layer {
             position: absolute;
             top: 0; left: 0; right: 0; bottom: 0;
-            z-index: 20; /* Sits on top of the glow */
+            z-index: 20;
             display: flex;
             flex-direction: column;
-            justify-content: flex-start; /* Changed from space-between to start from top */
             align-items: center;
             padding: 20px;
             color: white;
             pointer-events: none;
         }
 
-        /* Dynamic Island */
-        .dynamic-island {
-            width: 120px;
-            height: 35px;
-            background-color: black;
+        /* iPhone Wallpaper */
+        .wallpaper {
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: linear-gradient(135deg, #1c1c1e 0%, #000000 100%);
+            z-index: 0;
+        }
+
+        /* --- COMPONENT 2: AI ASSISTANT CARD --- */
+        .ai-assistant-card {
+            position: relative;
+            width: var(--card-width);
+            height: var(--card-height);
+            border-radius: var(--card-radius);
+            background-color: #121212;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.4);
+            z-index: 1;
+            overflow: hidden; 
+            display: flex;
+            flex-direction: column;
+            transform: scale(0.9);
+            border: 1px solid #333;
+        }
+
+        /* Updated Header: Removed background and border */
+        .ai-header {
+            padding: 24px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            z-index: 20;
+            /* Transparent so glow shows through */
+        }
+
+        .ai-avatar {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #5AC8FA, #5856D6);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 14px;
+        }
+
+        .ai-title {
+            font-weight: 600;
+            font-size: 1.1rem;
+        }
+
+        .ai-body {
+            flex: 1;
+            padding: 24px;
+            z-index: 20;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            overflow-y: auto;
+        }
+
+        /* Chat Bubbles */
+        .message {
+            max-width: 85%;
+            padding: 14px 18px;
             border-radius: 20px;
-            margin-top: 8px;
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .message.ai {
+            align-self: flex-start;
+            background-color: #2c2c2e;
+            color: #fff;
+            border-bottom-left-radius: 4px;
+        }
+
+        .message.user {
+            align-self: flex-end;
+            background: linear-gradient(135deg, #007AFF, #0056b3);
+            color: white;
+            border-bottom-right-radius: 4px;
+        }
+
+        /* Updated Input Area: Removed background and border */
+        .ai-input-area {
+            padding: 20px;
+            z-index: 20;
+            /* Transparent so glow shows through */
+        }
+
+        .input-pill {
+            width: 100%;
+            height: 50px;
+            background-color: #2c2c2e;
+            border-radius: 25px;
+            display: flex;
+            align-items: center;
+            padding: 0 20px;
+            box-sizing: border-box;
+            color: #888;
+            font-size: 0.95rem;
+            border: 1px solid #3a3a3a;
+        }
+
+        /* Typing Indicator */
+        .typing-dots {
+            display: flex;
+            gap: 4px;
+            padding: 4px 0;
+        }
+        .dot {
+            width: 6px;
+            height: 6px;
+            background-color: #888;
+            border-radius: 50%;
+            animation: bounce 1.4s infinite ease-in-out both;
+        }
+        .dot:nth-child(1) { animation-delay: -0.32s; }
+        .dot:nth-child(2) { animation-delay: -0.16s; }
+        
+        @keyframes bounce {
+            0%, 80%, 100% { transform: scale(0); }
+            40% { transform: scale(1); }
+        }
+
+
+        /* --- EXISTING UI ELEMENTS (Dynamic Island, etc) --- */
+        .dynamic-island {
+            width: 126px;
+            height: 37px;
+            background-color: #000;
+            border-radius: 20px;
+            margin-top: 10px;
             z-index: 30;
             display: flex;
             justify-content: center;
             align-items: center;
-            flex-shrink: 0;
         }
-        
-        /* Simulating the camera/sensors inside the island */
-        .island-sensors {
-            width: 40%;
-            height: 100%;
-            display: flex;
-            align-items: center;
-            justify-content: flex-end;
-            padding-right: 8px;
-        }
-        .island-dot {
-            width: 8px;
-            height: 8px;
-            background: #1a1a1a;
+
+        .camera-lens {
+            width: 12px;
+            height: 12px;
+            background: #111;
             border-radius: 50%;
-            box-shadow: 0 0 2px rgba(255,255,255,0.1);
+            margin-left: 50px;
+            box-shadow: inset 0 0 4px rgba(255,255,255,0.1);
         }
 
-        /* Wallpaper / Content background */
-        .wallpaper {
-            position: absolute;
-            top: 0; left: 0; right: 0; bottom: 0;
-            background: linear-gradient(180deg, #000000 0%, #1a1a1a 100%);
-            z-index: 0;
-            opacity: 0.9; /* Slightly transparent so glow pops */
-        }
-
-        /* New Container for Date and Time grouping */
         .lock-header {
-            margin-top: 35px; /* Space below Dynamic Island */
+            margin-top: 40px;
             display: flex;
             flex-direction: column;
             align-items: center;
             text-align: center;
         }
 
-        .date {
-            font-size: 1.3rem;
-            font-weight: 500;
-            color: rgba(255,255,255,0.85);
-            margin-bottom: 0; /* Sit directly on top of time */
-        }
-
         .time {
-            font-size: 5.8rem;
+            font-size: 6rem;
             font-weight: 600;
             line-height: 1;
-            margin: 0;
-            color: rgba(255,255,255,1);
-            letter-spacing: -1px;
-            text-shadow: 0 2px 10px rgba(0,0,0,0.3);
+            color: white;
+            letter-spacing: -2px;
+            background: linear-gradient(180deg, #fff 0%, #e0e0e0 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
         }
 
-        .bottom-bar {
-            width: 130px;
+        .date {
+            font-size: 1.2rem;
+            font-weight: 500;
+            color: rgba(255,255,255,0.9);
+            margin-bottom: 4px;
+        }
+
+        .shortcuts {
+            margin-top: auto;
+            width: 100%;
+            display: flex;
+            justify-content: space-between;
+            padding: 0 24px;
+            margin-bottom: 30px;
+            box-sizing: border-box;
+        }
+
+        .shortcut-btn {
+            width: 50px;
+            height: 50px;
+            background-color: rgba(255, 255, 255, 0.15);
+            backdrop-filter: blur(10px);
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .home-bar {
+            width: 140px;
             height: 5px;
-            background-color: rgba(255,255,255,0.5);
+            background-color: white;
             border-radius: 10px;
             margin-bottom: 8px;
-            margin-top: auto; /* Pushes bar to the very bottom */
         }
 
-        .helper-text {
-            position: absolute;
-            bottom: -50px;
-            color: #666;
-            font-size: 0.9rem;
+        .icon-svg {
+            width: 24px;
+            height: 24px;
+            fill: white;
         }
 
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
     </style>
 </head>
 <body>
 
-    <div class="iphone-chassis">
-        <!-- 1. Background -->
-        <div class="wallpaper"></div>
+    <header>
+        <h1>Apple Intelligence</h1>
+        <p style="color: #666; font-size: 0.9rem;">Multi-Context Glow Integration</p>
+    </header>
 
-        <!-- 2. The Glow Effects Go Here -->
-        <div id="glow-container"></div>
+    <div class="main-stage">
+        
+        <!-- === LEFT PANEL: iPhone === -->
+        <div class="iphone-chassis">
+            <!-- Background -->
+            <div class="wallpaper"></div>
 
-        <!-- 3. The UI (Island, Time, etc) -->
-        <div class="ui-layer">
-            <div class="dynamic-island">
-                <div class="island-sensors">
-                    <div class="island-dot"></div>
+            <!-- GLOW CONTAINER (Phone) -->
+            <div id="glow-container-phone" class="glow-container-wrapper"></div>
+
+            <!-- UI -->
+            <div class="ui-layer">
+                <div class="dynamic-island">
+                    <div class="island-sensors"><div class="camera-lens"></div></div>
+                </div>
+                
+                <div class="lock-header">
+                    <div class="date" id="date-display">Monday, June 10</div>
+                    <div class="time" id="clock">09:41</div>
+                </div>
+
+                <div class="shortcuts">
+                    <div class="shortcut-btn">
+                        <svg class="icon-svg" viewBox="0 0 24 24"><path d="M7 2v11h3v9l7-12h-4l4-8z"></path></svg>
+                    </div>
+                    <div class="shortcut-btn">
+                        <svg class="icon-svg" viewBox="0 0 24 24"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"></path></svg>
+                    </div>
+                </div>
+                <div class="home-bar"></div>
+            </div>
+        </div>
+
+        <!-- === RIGHT PANEL: AI Assistant === -->
+        <div class="ai-assistant-card">
+            
+            <!-- GLOW CONTAINER (Assistant) -->
+            <div id="glow-container-assistant" class="glow-container-wrapper"></div>
+            
+            <!-- Header -->
+            <div class="ai-header">
+                <div class="ai-avatar">AI</div>
+                <div class="ai-title">Assistant</div>
+            </div>
+
+            <!-- Chat Body -->
+            <div class="ai-body">
+                <div class="message user">
+                    Show me the new glow effect.
+                </div>
+                <div class="message ai">
+                    <div class="typing-dots" style="display:none;" id="typing-indicator">
+                        <div class="dot"></div><div class="dot"></div><div class="dot"></div>
+                    </div>
+                    <span id="ai-text">Here it is. I've applied the same conic gradient animation to my own interface borders. It adapts to any container shape.</span>
+                </div>
+                
+                <div class="message user" style="margin-top: 10px;">
+                    Looks clean!
                 </div>
             </div>
-            
-            <div class="lock-header">
-                <div class="date">Monday, June 10</div>
-                <div class="time" id="clock">09:41</div>
-            </div>
 
-            <div class="bottom-bar"></div>
+            <!-- Input Area -->
+            <div class="ai-input-area">
+                <div class="input-pill">Type a message...</div>
+            </div>
         </div>
+
     </div>
 
-    <div class="helper-text">CSS + JS Re-creation of Apple Intelligence Glow</div>
-
 <script>
-    // --- CLOCK LOGIC (Just for demo feel) ---
+    // --- UTILITIES ---
     function updateClock() {
         const now = new Date();
         const hours = String(now.getHours()).padStart(2, '0');
         const minutes = String(now.getMinutes()).padStart(2, '0');
-        document.getElementById('clock').innerText = `${hours}:${minutes}`;
+        const options = { weekday: 'long', month: 'long', day: 'numeric' };
+        
+        const clockEl = document.getElementById('clock');
+        const dateEl = document.getElementById('date-display');
+        
+        if(clockEl) clockEl.innerText = `${hours}:${minutes}`;
+        if(dateEl) dateEl.innerText = now.toLocaleDateString('en-US', options);
     }
     setInterval(updateClock, 1000);
     updateClock();
 
 
-    // --- GLOW LOGIC (Unchanged mostly, just targeted correctly) ---
-    
+    // --- CORE GLOW LOGIC (REUSABLE) ---
     const COLORS = [
-        "#BC82F3", "#F5B9EA", "#8D9FFF", 
-        "#FF6778", "#FFBA71", "#C686FF"
+        "#5AC8FA", "#AF52DE", "#FF2D55", 
+        "#FF9500", "#FFCC00", "#5856D6"
     ];
 
     function generateConicGradientString() {
@@ -235,9 +474,9 @@
             color: color,
             location: Math.random() * 100
         }));
-
         stops.sort((a, b) => a.location - b.location);
         const stopStrings = stops.map(s => `${s.color} ${s.location.toFixed(2)}%`);
+        stopStrings.push(`${stops[0].color} 100%`);
         return `conic-gradient(from 0deg, ${stopStrings.join(', ')})`;
     }
 
@@ -245,15 +484,12 @@
         constructor(container, config) {
             this.width = config.width;
             this.blur = config.blur;
-            this.interval = config.interval * 1000;
+            this.interval = config.interval * 1000; 
             this.duration = config.duration;
 
             this.el = document.createElement('div');
             this.el.className = 'effect-layer';
-            
-            if (this.blur > 0) {
-                this.el.style.filter = `blur(${this.blur}px)`;
-            }
+            if (this.blur > 0) this.el.style.filter = `blur(${this.blur}px)`;
 
             const ring = document.createElement('div');
             ring.className = 'ring-container';
@@ -277,7 +513,7 @@
         createBuffer() {
             const div = document.createElement('div');
             div.className = 'gradient-buffer';
-            // Important: Matches CSS padding to create the "stroke"
+            // Important: Padding creates the visible border thickness
             div.style.padding = `${this.width}px`; 
             div.style.transitionDuration = `${this.duration}s`;
             div.style.transitionTimingFunction = 'ease-in-out';
@@ -289,14 +525,11 @@
         }
 
         startTimer() {
-            setInterval(() => {
-                this.animate();
-            }, this.interval);
+            setInterval(() => this.animate(), this.interval);
         }
 
         animate() {
             const newGradient = generateConicGradientString();
-            
             if (this.activeBuffer === 1) {
                 this.setGradient(this.buffer2, newGradient);
                 this.buffer2.style.opacity = 1;
@@ -311,21 +544,50 @@
         }
     }
 
-    // --- INIT ---
-    const glowContainer = document.getElementById('glow-container');
+    // --- INITIALIZATION FUNCTION ---
+    function initGlowForElement(elementId, intensityMultiplier = 1.0) {
+        const container = document.getElementById(elementId);
+        if(!container) return;
 
-    // We adjust the widths slightly for the smaller mobile frame
-    // 1. Sharp inner edge
-    new GlowRing(glowContainer, { width: 5, blur: 0, interval: 0.4, duration: 0.5 });
+        // Layer 1: Sharp edge
+        new GlowRing(container, { 
+            width: 4 * intensityMultiplier, 
+            blur: 2, 
+            interval: 0.5, 
+            duration: 0.6 
+        });
 
-    // 2. Main visible body
-    new GlowRing(glowContainer, { width: 8, blur: 5, interval: 0.4, duration: 0.6 });
+        // Layer 2: Main body
+        new GlowRing(container, { 
+            width: 8 * intensityMultiplier, 
+            blur: 6, 
+            interval: 0.5, 
+            duration: 0.8 
+        });
 
-    // 3. Outer soft glow
-    new GlowRing(glowContainer, { width: 10, blur: 15, interval: 0.4, duration: 0.8 });
+        // Layer 3: Soft ambient
+        new GlowRing(container, { 
+            width: 12 * intensityMultiplier, 
+            blur: 16, 
+            interval: 0.6, 
+            duration: 1.2 
+        });
+        
+        // Layer 4: Distant dispersion (Optional, adds heavy lag on some devices if doubled)
+        new GlowRing(container, { 
+            width: 20 * intensityMultiplier, 
+            blur: 32, 
+            interval: 0.8, 
+            duration: 1.5 
+        });
+    }
 
-    // 4. Wide ambiance
-    new GlowRing(glowContainer, { width: 15, blur: 25, interval: 0.5, duration: 1.0 });
+    // --- BOOTSTRAP ---
+    // 1. Activate Phone Glow
+    initGlowForElement('glow-container-phone');
+
+    // 2. Activate Assistant Glow (Maybe slightly thinner width for the card)
+    initGlowForElement('glow-container-assistant', 0.8);
 
 </script>
 </body>

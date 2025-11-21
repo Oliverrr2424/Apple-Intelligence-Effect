@@ -2,6 +2,8 @@
 
 Apple Intelligence–inspired animated glow border as a reusable React component.
 
+![Glow Demo](./glow_demo.png)
+
 This package exposes:
 
 - **`AppleIntelligenceGlow`** – the core, reusable glow container. It only renders the animated border and lets you provide any content inside.
